@@ -1,0 +1,53 @@
+version: '3.5'
+
+services:
+
+  php:
+    build:
+      context: php/
+    container_name: "php-service"
+    restart: unless-stopped
+    volumes:
+      - ./php/conf/php.ini-production:/usr/local/etc/php/php.ini
+      - ./php/html:/var/www/html
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+    environment:
+      PHP_INI_DIR: /usr/local/etc/php
+      TZ: America/Montevideo
+    ports:
+      - 80:80
+    links:
+      - mysql
+    networks:
+      inventario-network:
+        ipv4_address: 172.16.236.10
+
+  mysql:
+    container_name: "mysql-service"
+    build:
+      context: mysql/
+    restart: unless-stopped
+    volumes:
+      - ./mysql/mysql_data:/var/lib/mysql
+      - /etc/timezone:/etc/timezone
+      - /etc/localtime:/etc/localtime
+    environment:
+      MYSQL_ROOT_PASSWORD: inventario
+      MYSQL_DATABASE: default
+      MYSQL_USER: inventario
+      MYSQL_PASSWORD: inventario
+      MYSQL_ROOT_HOST: '%'
+    ports:
+      - 3307:3307
+    networks:
+      inventario-network:
+        ipv4_address: 172.16.236.11
+
+networks:
+  inventario-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.16.236.0/24
